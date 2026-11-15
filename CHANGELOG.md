@@ -6,6 +6,8 @@ siguen [SemVer](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+## [0.8.0] - 2026-11-14
+
 ### Corregido
 
 - El commit de la versión que crea `star release` ahora termina con la línea
