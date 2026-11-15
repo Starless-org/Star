@@ -35,11 +35,15 @@ const pr = (over: Partial<PullRequestDetail> = {}): PullRequestDetail => ({
 function setup(states: Partial<PullRequestDetail>[], branch = "feat/pr-merge") {
   let i = 0;
   const merges: string[] = [];
+  const ignored: string[][] = [];
   const logs: string[] = [];
   const git = fakeGit({ branch: () => branch });
   const gh = {
     available: () => true,
-    viewPr: () => pr(states[Math.min(i++, states.length - 1)]),
+    viewPr: (_ref?: string, ignore?: string[]) => {
+      ignored.push(ignore ?? []);
+      return pr(states[Math.min(i++, states.length - 1)]);
+    },
     mergeSquash: (n: number, subject: string, body?: string) => {
       merges.push(`#${n} ${subject} | ${body}`);
     },
@@ -55,7 +59,7 @@ function setup(states: Partial<PullRequestDetail>[], branch = "feat/pr-merge") {
     },
     now: () => t,
   };
-  return { deps, git, merges, logs };
+  return { deps, git, merges, logs, ignored };
 }
 
 describe("mergePr", () => {
@@ -98,6 +102,17 @@ describe("mergePr", () => {
     await mergePr(deps, "12");
     expect(merges).toEqual([]);
     expect(logs).toContain("El PR #12 ya está mergeado.");
+  });
+
+  it("le pasa a gh los checks de star.ignoreChecks", async () => {
+    const { deps, ignored } = setup([{}]);
+    writeFileSync(
+      join(deps.root, "package.json"),
+      JSON.stringify({ name: "app", star: { gate: [], ignoreChecks: ["Vercel"] } }),
+    );
+    await mergePr(deps, "12");
+    expect(ignored.length).toBeGreaterThan(0);
+    expect(ignored.every((i) => i.join() === "Vercel")).toBe(true);
   });
 
   it("desde otra rama no te cambia de rama", async () => {

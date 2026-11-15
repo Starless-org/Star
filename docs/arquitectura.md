@@ -120,6 +120,10 @@ espera el CI con la misma espera de `release` y mergea a la base con squash,
 título como asunto y descripción como cuerpo. No pregunta y no depende de
 `autoMerge`: llamarlo ya es pedirlo.
 
+Si un check externo que no bloquea (el deploy de Vercel) frena la espera, se
+lista en `"star": { "ignoreChecks": ["Vercel"] }` y ni `release` ni `pr merge`
+lo cuentan (decisión 26).
+
 **La puerta** sale de `"star": { "gate": ... }` en el `package.json` de la app.
 Sin configurar, si la app usa Vite+ es `vp check` y `vp test run`. En una app
 con Vite+ conviene apuntarla a una tarea cacheada (`"gate": "vp run verify"`):

@@ -357,14 +357,18 @@ export async function finishRelease(
   if (dirty.length > 0) problems.push("hay cambios sin commitear: commitéalos o guárdalos antes.");
 
   const ghReady = gh.available();
-  let pr = ghReady ? gh.findPr(head) : null;
+  let pr = ghReady ? gh.findPr(head, config.ignoreChecks) : null;
   // Con autoMerge, un CI que todavía corre se espera en vez de ser un problema.
   if (
     config.autoMerge &&
     pr?.state === "OPEN" &&
     (pr.checks === "pending" || pr.checks === "none")
   ) {
-    pr = await waitForChecks(deps, () => gh.findPr(head), `${STAR} release finish ${version}`);
+    pr = await waitForChecks(
+      deps,
+      () => gh.findPr(head, config.ignoreChecks),
+      `${STAR} release finish ${version}`,
+    );
   }
   if (!ghReady) {
     warnings.push(`sin gh no puedo ver el PR de ${head}: se asume que ya está mergeado.`);

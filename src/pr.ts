@@ -34,7 +34,7 @@ export async function mergePr(deps: PrDeps, ref?: string): Promise<void> {
   const config = readConfig(root);
   if (!gh.available()) throw new StarError("gh no está instalado o no tiene sesión.");
 
-  const found = gh.viewPr(ref);
+  const found = gh.viewPr(ref, config.ignoreChecks);
   if (!found) {
     throw new StarError(
       ref
@@ -64,7 +64,11 @@ export async function mergePr(deps: PrDeps, ref?: string): Promise<void> {
   }
   if (problems.length > 0) fail(`El PR #${found.number} no se puede mergear:`, problems);
 
-  const pr = await waitForChecks(deps, () => gh.viewPr(String(found.number)), resume);
+  const pr = await waitForChecks(
+    deps,
+    () => gh.viewPr(String(found.number), config.ignoreChecks),
+    resume,
+  );
   if (!pr) throw new StarError(`el PR #${found.number} desapareció mientras esperaba el CI.`);
   if (pr.state === "MERGED") {
     io.log(`El PR #${pr.number} ya está mergeado.`);

@@ -2,6 +2,22 @@ import { describe, expect, it } from "vite-plus/test";
 import { summarizeChecks } from "./gh.ts";
 
 describe("summarizeChecks", () => {
+  it("los checks ignorados no cuentan, ni como fallo ni como pendiente", () => {
+    const rollup = [
+      { name: "Check, test, build", status: "COMPLETED", conclusion: "SUCCESS" },
+      { context: "Vercel", state: "FAILURE" },
+      { name: "Vercel Preview Comments", status: "IN_PROGRESS" },
+    ];
+    expect(summarizeChecks(rollup)).toBe("failing");
+    // Nombre completo: ignorar "vercel" no ignora "Vercel Preview Comments".
+    expect(summarizeChecks(rollup, ["vercel"])).toBe("pending");
+    expect(summarizeChecks(rollup, ["vercel", "Vercel Preview Comments"])).toBe("passing");
+  });
+
+  it("si todo se ignora, no queda ningún check", () => {
+    expect(summarizeChecks([{ context: "Vercel", state: "FAILURE" }], ["Vercel"])).toBe("none");
+  });
+
   it("sin checks es none", () => {
     expect(summarizeChecks([])).toBe("none");
   });

@@ -17,6 +17,12 @@ siguen [SemVer](https://semver.org/lang/es/).
 
 ### Agregado
 
+- `"star": { "ignoreChecks": ["Vercel"] }`: nombres de checks que no cuentan al
+  esperar el CI de un PR, en `star release` y en `star pr merge`. Sirve para
+  servicios externos que no bloquean (el deploy de Vercel): antes un check
+  rojo de ésos hacía abortar la release con "el CI del PR falló". Se compara
+  el nombre completo, sin distinguir mayúsculas; si todo se ignora, el PR queda
+  "sin checks".
 - `star pr merge [número]`: espera el CI de un PR (el de la rama actual, si no
   dices cuál) y lo mergea a la base con squash, con el título y el número del
   PR como asunto (como lo deja GitHub) y la descripción como cuerpo. No pregunta: mergear a la base es automático. Rechaza

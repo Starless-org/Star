@@ -24,6 +24,7 @@ describe("readConfig", () => {
       lint: { skip: [] },
       autoMerge: false,
       confirmRelease: true,
+      ignoreChecks: [],
     });
   });
 
@@ -38,6 +39,7 @@ describe("readConfig", () => {
       lint: { skip: [] },
       autoMerge: false,
       confirmRelease: true,
+      ignoreChecks: [],
     });
     expect(readConfig(withPackage({ star: { gate: ["biome check", "bun test"] } })).gate).toEqual([
       "biome check",
@@ -55,6 +57,14 @@ describe("readConfig", () => {
     expect(readConfig(withPackage({})).confirmRelease).toBe(true);
     expect(readConfig(withPackage({ star: { confirmRelease: false } })).confirmRelease).toBe(false);
     expect(() => readConfig(withPackage({ star: { confirmRelease: "no" } }))).toThrow(StarError);
+  });
+
+  it("lee ignoreChecks, que por defecto no ignora nada", () => {
+    expect(readConfig(withPackage({})).ignoreChecks).toEqual([]);
+    expect(readConfig(withPackage({ star: { ignoreChecks: ["Vercel"] } })).ignoreChecks).toEqual([
+      "Vercel",
+    ]);
+    expect(() => readConfig(withPackage({ star: { ignoreChecks: "Vercel" } }))).toThrow(StarError);
   });
 
   it("lee la historia que el lint no revisa", () => {
