@@ -17,6 +17,11 @@ siguen [SemVer](https://semver.org/lang/es/).
 
 ### Agregado
 
+- `star doctor` revisa los inputs que la app le pasa a los workflows de star:
+  si el `with:` de un job incluye un input que el workflow de esa versión
+  (`…/web-release.yml@v0.7.0`) no define, es un error. GitHub no lo explica: la
+  corrida muere con `startup_failure` y sin log. Compara contra el workflow de
+  ese tag, leído con `gh`; sin `gh` no dice nada, y si no pudo leerlo, avisa.
 - `"star": { "ignoreChecks": ["Vercel"] }`: nombres de checks que no cuentan al
   esperar el CI de un PR, en `star release` y en `star pr merge`. Sirve para
   servicios externos que no bloquean (el deploy de Vercel): antes un check

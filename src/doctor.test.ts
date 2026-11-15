@@ -19,6 +19,7 @@ const gh = (available = true, settings: MergeSettings | null = wanted("develop")
   mergeSquash: () => {},
   releaseAssets: () => [],
   downloadAsset: () => null,
+  starWorkflow: () => null,
   secretNames: () => [],
   setSecret: () => {},
   mergeSettings: () => settings,

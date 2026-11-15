@@ -350,3 +350,17 @@ si falla (o tarda) frena una versión que el CI propio ya aprobó.
   check run (`name`) o del commit status (`context`), completo y sin distinguir
   mayúsculas: `Vercel` no ignora `Vercel Preview Comments`.
 - Si todo se ignora, el PR queda "sin checks", como uno que no tiene CI.
+
+## 27. `star doctor` compara los inputs con el workflow de su versión
+
+Una app pasó `publish` a `web-release.yml@v0.7.0`, que todavía no lo definía:
+`startup_failure` sin ningún log. El chequeo de versiones (que el `@v` coincida
+con el star instalado) no lo atrapa si ambas dicen lo mismo.
+
+- **Se lee el workflow de ese tag desde GitHub** (`gh api …/contents/…?ref=vX`),
+  no del clon: el que importa es el de la versión a la que apunta la app. Es la
+  única parte de `doctor` que sale a la red, y sólo con `gh` con sesión.
+- **Texto, no YAML**: sin parser en el kit; los inputs de `workflow_call` y el
+  `with:` de un job tienen una forma fija (`src/workflow-inputs.ts`).
+- **Un input desconocido es error** (la corrida no arranca); no poder leer el
+  workflow es sólo aviso.

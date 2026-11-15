@@ -38,6 +38,7 @@ function fakeGh(initial: MergeSettings = GITHUB_DEFAULTS): Gh & { patches: objec
     mergeSquash: () => {},
     releaseAssets: () => [],
     downloadAsset: () => null,
+    starWorkflow: () => null,
     secretNames: () => [],
     setSecret: () => {},
     mergeSettings: () => settings,

@@ -42,6 +42,11 @@ export type Gh = {
   releaseAssets(tag: string): { id: number; name: string }[];
   /** El contenido de un asset como texto, o `null` si no está. */
   downloadAsset(tag: string, name: string): string | null;
+  /**
+   * Un workflow reutilizable de star (`web-release.yml`) como estaba en ese tag
+   * (`v0.7.0`), o `null` si no se pudo leer (sin red, o ese tag no lo tiene).
+   */
+  starWorkflow(file: string, ref: string): string | null;
   /** Los nombres de los secretos del repo (nunca los valores), o `null` si no se pudo preguntar. */
   secretNames(): string[] | null;
   /** Guarda un secreto del repo. El valor va por stdin: nunca en argv ni en pantalla. */
@@ -240,6 +245,15 @@ ${r.err}`);
         id: Number(/\/assets\/(\d+)/.exec(a.apiUrl)?.[1] ?? Number.NaN),
         name: a.name,
       }));
+    },
+    starWorkflow(file, ref) {
+      const r = run([
+        "api",
+        `repos/baironvillar/star/contents/.github/workflows/${file}?ref=${ref}`,
+        "-H",
+        "Accept: application/vnd.github.raw+json",
+      ]);
+      return r.status === 0 ? r.out : null;
     },
     secretNames() {
       const r = run(["secret", "list", "--json", "name"]);
