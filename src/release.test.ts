@@ -7,7 +7,14 @@ import { StarError } from "./errors.ts";
 import type { Gh, PullRequest } from "./gh.ts";
 import { gitIn } from "./git.ts";
 import type { Manifest } from "./manifests/types.ts";
-import { checkPrepare, finishRelease, prepareRelease, type ReleaseDeps } from "./release.ts";
+import {
+  checkPrepare,
+  DOCS_SKIP,
+  finishRelease,
+  prepareRelease,
+  type ReleaseDeps,
+  versionCommitMessage,
+} from "./release.ts";
 import { fakeGit } from "./testing/fake-git.ts";
 import type { Entry } from "./version.ts";
 
@@ -316,6 +323,31 @@ describe("prepareRelease y finishRelease con git", { timeout: 60_000 }, () => {
       "CHANGELOG.md",
       "package.json",
     ]);
+  });
+
+  it("el commit de la versión termina con un docs-skip válido y su asunto sigue siendo la versión", async () => {
+    const { work } = repo();
+    writeFileSync(join(work, "CHANGELOG.md"), "# Changelog\n\n## [0.2.0]\n\n- Recién escrito.\n");
+
+    await prepareRelease(
+      deps(work, () => null, []),
+      "minor",
+    );
+
+    expect(git(work, "log", "-1", "--format=%s", "HEAD")).toBe("0.2.0");
+    const lines = git(work, "log", "-1", "--format=%B", "HEAD").trimEnd().split("\n");
+    const last = lines.at(-1) ?? "";
+    expect(last).toBe(DOCS_SKIP);
+    expect(last).toMatch(/^docs-skip: .{20,}$/);
+    expect(last.slice("docs-skip: ".length).length).toBeGreaterThan(20);
+    // Sólo en el commit de la versión: ningún otro mensaje del repo lo lleva.
+    expect(git(work, "log", "--format=%B", "HEAD~1").includes("docs-skip")).toBe(false);
+  });
+
+  it("versionCommitMessage deja la versión sola de asunto y sin trailers después", () => {
+    const message = versionCommitMessage("1.4.1");
+    expect(message.split("\n")[0]).toBe("1.4.1");
+    expect(message.endsWith(DOCS_SKIP)).toBe(true);
   });
 
   /** Un repo con esa clave "star", y un gh cuyo CI pasa después de esperar. */

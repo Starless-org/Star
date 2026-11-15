@@ -62,6 +62,11 @@ Se divide en dos capas:
 
 Detalle en [`docs/arquitectura.md`](docs/arquitectura.md).
 
+El commit de versión que crea `star release` se llama como la versión y su
+cuerpo termina con `docs-skip: version bump only, the release notes live in
+CHANGELOG.md`, para que el `docs-check` de la app no lo rechace (decisión 25
+de [`docs/decisiones.md`](docs/decisiones.md)).
+
 ## Plataformas
 
 - **Windows y Linux:** el objetivo de la primera versión.

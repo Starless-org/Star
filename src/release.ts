@@ -50,6 +50,19 @@ import {
 /** La rama de lo publicado. Fija, como en `star lint`. */
 export const MAIN = "main";
 
+/**
+ * Última línea del commit de la versión. El `docs-check` de las apps exige
+ * documentación cuando cambia `package.json`, o un `docs-skip: <motivo>` de al
+ * menos 20 caracteres como última línea del mensaje. Un bump no documenta
+ * nada: sus notas viven en el CHANGELOG. Sólo este commit la lleva.
+ */
+export const DOCS_SKIP = "docs-skip: version bump only, the release notes live in CHANGELOG.md";
+
+/** El mensaje del commit de la versión: la versión sola de asunto y el docs-skip al final. */
+export function versionCommitMessage(version: string): string {
+  return `${version}\n\n${DOCS_SKIP}`;
+}
+
 export type Io = {
   log(message: string): void;
   warn(message: string): void;
@@ -281,7 +294,7 @@ export async function prepareRelease(
     applyChanges(changes);
     if (check.promoted) writeFileSync(changelogPath, check.promoted, "utf8");
     git.add([...changes.map((c) => c.manifest.path), changelogPath]);
-    git.commit(next);
+    git.commit(versionCommitMessage(next));
     git.push(["-u", "origin", branch]);
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
