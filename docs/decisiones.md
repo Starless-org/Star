@@ -322,3 +322,17 @@ el asunto a su manera.
   como lo deja GitHub al mergear desde la web, aunque el repo no esté
   configurado así: star le pasa el asunto y el cuerpo.
 - Si estabas en la rama del PR, quedas en la base al día.
+
+## 25. El commit de la versión lleva un `docs-skip`
+
+Las apps con `docs-check` y un doc-map exigen documentación cuando cambia
+`package.json`, o un `docs-skip: <motivo de al menos 20 caracteres>` como
+última línea del mensaje del commit. El commit de versión sólo cambia números
+y mueve el CHANGELOG, y el CI del PR salía rojo.
+
+- **El cuerpo del commit de la versión termina con** `docs-skip: version bump
+  only, the release notes live in CHANGELOG.md`, sin nada después. El asunto
+  sigue siendo la versión sola; el cuerpo es libre en la convención.
+- **Sólo ese commit.** Un `docs-skip` en otro commit saltaría el gate de docs
+  de un cambio que sí debe documentarse.
+- La constante está en `src/release.ts` (`DOCS_SKIP`) y un test la fija.

@@ -6,6 +6,15 @@ siguen [SemVer](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+### Corregido
+
+- El commit de la versión que crea `star release` ahora termina con la línea
+  `docs-skip: version bump only, the release notes live in CHANGELOG.md`. Las
+  apps con `docs-check` exigen documentación cuando cambia `package.json`, o
+  un `docs-skip` como última línea del mensaje; sin él, el CI del PR de la
+  versión salía rojo y había que agregar a mano un commit vacío. El asunto
+  sigue siendo sólo la versión, y ningún otro commit lleva la línea.
+
 ### Agregado
 
 - `star pr merge [número]`: espera el CI de un PR (el de la rama actual, si no
