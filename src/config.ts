@@ -19,6 +19,11 @@ export type Config = {
    * merge a `main` y el tag. Con `false` y `autoMerge`, es 100% automático.
    */
   confirmRelease: boolean;
+  /**
+   * Nombres de checks que no cuentan al esperar el CI de un PR: servicios
+   * externos que no bloquean (el deploy de Vercel, por ejemplo).
+   */
+  ignoreChecks: string[];
 };
 
 type PackageJson = {
@@ -28,6 +33,7 @@ type PackageJson = {
     lint?: { since?: unknown; skip?: unknown };
     autoMerge?: unknown;
     confirmRelease?: unknown;
+    ignoreChecks?: unknown;
   };
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -87,6 +93,12 @@ export function readConfig(root: string): Config {
   if (star.confirmRelease !== undefined && typeof star.confirmRelease !== "boolean") {
     throw new StarError('"star.confirmRelease" en package.json tiene que ser true o false.');
   }
+  if (
+    star.ignoreChecks !== undefined &&
+    !(Array.isArray(star.ignoreChecks) && star.ignoreChecks.every((c) => typeof c === "string"))
+  ) {
+    throw new StarError('"star.ignoreChecks" en package.json tiene que ser una lista de nombres.');
+  }
 
   return {
     base: star.base ?? "develop",
@@ -94,5 +106,6 @@ export function readConfig(root: string): Config {
     lint: { since: lint.since, skip: (lint.skip as string[] | undefined) ?? [] },
     autoMerge: star.autoMerge ?? false,
     confirmRelease: star.confirmRelease ?? true,
+    ignoreChecks: (star.ignoreChecks as string[] | undefined) ?? [],
   };
 }

@@ -26,10 +26,16 @@ export type Gh = {
   available(): boolean;
   /** Abre el PR y devuelve su URL. */
   createPr(input: { base: string; head: string; title: string; body: string }): string;
-  /** El PR más reciente de esa rama, abierto o no. */
-  findPr(head: string): PullRequest | null;
-  /** Un PR por número, o el de la rama actual si no se dice. `null` si no hay. */
-  viewPr(ref?: string): PullRequestDetail | null;
+  /**
+   * El PR más reciente de esa rama, abierto o no. Los checks cuyo nombre esté
+   * en `ignore` no cuentan (`star.ignoreChecks`).
+   */
+  findPr(head: string, ignore?: string[]): PullRequest | null;
+  /**
+   * Un PR por número, o el de la rama actual si no se dice. `null` si no hay.
+   * Los checks cuyo nombre esté en `ignore` no cuentan.
+   */
+  viewPr(ref?: string, ignore?: string[]): PullRequestDetail | null;
   /** Squash and merge con el asunto exacto, y el cuerpo que se diga (vacío si no). */
   mergeSquash(number: number, subject: string, body?: string): void;
   /** Los assets de la release de ese tag, también si es un borrador. */
@@ -82,7 +88,15 @@ export function parseMergeSettings(json: string): MergeSettings | null {
   };
 }
 
-type Rollup = { status?: string; conclusion?: string; state?: string };
+type Rollup = {
+  /** El nombre de un check run de Actions. */
+  name?: string;
+  /** El nombre de un commit status de otro servicio (Vercel, por ejemplo). */
+  context?: string;
+  status?: string;
+  conclusion?: string;
+  state?: string;
+};
 
 /**
  * Los checks de un PR, reducidos a una palabra.
@@ -90,11 +104,17 @@ type Rollup = { status?: string; conclusion?: string; state?: string };
  * `statusCheckRollup` mezcla dos tipos: los check runs de Actions (con `status`
  * y `conclusion`) y los commit statuses de otros servicios (con `state`). Un
  * neutral o un skipped no frena nada; un cancelado sí, porque no prueba nada.
+ *
+ * Los checks de `ignore` (por nombre, sin distinguir mayúsculas) se descartan
+ * antes: un servicio externo que no bloquea, como el deploy de Vercel, no debe
+ * contar como CI roto ni como CI pendiente.
  */
-export function summarizeChecks(rollup: Rollup[]): PullRequest["checks"] {
-  if (rollup.length === 0) return "none";
+export function summarizeChecks(rollup: Rollup[], ignore: string[] = []): PullRequest["checks"] {
+  const skip = new Set(ignore.map((n) => n.toLowerCase()));
+  const counted = rollup.filter((c) => !skip.has((c.name || c.context || "").toLowerCase()));
+  if (counted.length === 0) return "none";
   let pending = false;
-  for (const item of rollup) {
+  for (const item of counted) {
     const result = (item.conclusion || item.state || "").toUpperCase();
     const status = (item.status ?? "").toUpperCase();
     if (
@@ -133,7 +153,7 @@ export function ghIn(cwd: string): Gh {
       if (r.status !== 0) throw new StarError(`gh no pudo abrir el PR:\n${r.err}`);
       return r.out.split(/\r?\n/).pop() ?? "";
     },
-    findPr(head) {
+    findPr(head, ignore) {
       const r = run([
         "pr",
         "list",
@@ -159,12 +179,12 @@ export function ghIn(cwd: string): Gh {
         number: pr.number,
         url: pr.url,
         state: pr.state,
-        checks: summarizeChecks(pr.statusCheckRollup ?? []),
+        checks: summarizeChecks(pr.statusCheckRollup ?? [], ignore),
         mergeable:
           pr.mergeable === "MERGEABLE" ? true : pr.mergeable === "CONFLICTING" ? false : null,
       };
     },
-    viewPr(ref) {
+    viewPr(ref, ignore) {
       const r = run([
         "pr",
         "view",
@@ -193,7 +213,7 @@ ${r.err}`);
         number: pr.number,
         url: pr.url,
         state: pr.state,
-        checks: summarizeChecks(pr.statusCheckRollup ?? []),
+        checks: summarizeChecks(pr.statusCheckRollup ?? [], ignore),
         mergeable:
           pr.mergeable === "MERGEABLE" ? true : pr.mergeable === "CONFLICTING" ? false : null,
         title: pr.title,

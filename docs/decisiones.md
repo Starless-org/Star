@@ -336,3 +336,17 @@ y mueve el CHANGELOG, y el CI del PR salía rojo.
 - **Sólo ese commit.** Un `docs-skip` en otro commit saltaría el gate de docs
   de un cambio que sí debe documentarse.
 - La constante está en `src/release.ts` (`DOCS_SKIP`) y un test la fija.
+
+## 26. `ignoreChecks`: servicios externos que no bloquean
+
+`star release` y `star pr merge` esperan los checks del PR y se paran si uno
+falla. Un servicio externo como el deploy de Vercel aparece en esos checks, y
+si falla (o tarda) frena una versión que el CI propio ya aprobó.
+
+- **Una lista de nombres en la config**, `"star": { "ignoreChecks": [...] }`,
+  vacía por defecto: nada se ignora sin decirlo.
+- **Se descartan antes de resumir los checks** (`summarizeChecks`), así el
+  ignorado no cuenta ni como fallo ni como pendiente. Se compara el nombre del
+  check run (`name`) o del commit status (`context`), completo y sin distinguir
+  mayúsculas: `Vercel` no ignora `Vercel Preview Comments`.
+- Si todo se ignora, el PR queda "sin checks", como uno que no tiene CI.
