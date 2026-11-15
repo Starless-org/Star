@@ -178,6 +178,7 @@ describe("prepareRelease y finishRelease con git", { timeout: 60_000 }, () => {
       },
       findPr: pr,
       viewPr: () => null,
+      starWorkflow: () => null,
       mergeSquash: () => {
         throw new Error("en este test el PR ya viene mergeado");
       },
