@@ -12,20 +12,41 @@ export type PullRequest = {
   mergeable: boolean | null;
 };
 
+/** Un PR con lo que hace falta para mergearlo: título, descripción y ramas. */
+export type PullRequestDetail = PullRequest & {
+  title: string;
+  body: string;
+  base: string;
+  head: string;
+};
+
 /** Lo que el kit le pide a GitHub, a través de `gh`. Interfaz para probarlo con un doble. */
 export type Gh = {
   /** Si `gh` está instalado y con sesión. */
   available(): boolean;
   /** Abre el PR y devuelve su URL. */
   createPr(input: { base: string; head: string; title: string; body: string }): string;
-  /** El PR más reciente de esa rama, abierto o no. */
-  findPr(head: string): PullRequest | null;
-  /** Squash and merge con el asunto exacto y sin cuerpo. */
-  mergeSquash(number: number, subject: string): void;
+  /**
+   * El PR más reciente de esa rama, abierto o no. Los checks cuyo nombre esté
+   * en `ignore` no cuentan (`star.ignoreChecks`).
+   */
+  findPr(head: string, ignore?: string[]): PullRequest | null;
+  /**
+   * Un PR por número, o el de la rama actual si no se dice. `null` si no hay.
+   * Los checks cuyo nombre esté en `ignore` no cuentan.
+   */
+  viewPr(ref?: string, ignore?: string[]): PullRequestDetail | null;
+  /** Squash and merge con el asunto exacto, y el cuerpo que se diga (vacío si no). */
+  mergeSquash(number: number, subject: string, body?: string): void;
   /** Los assets de la release de ese tag, también si es un borrador. */
   releaseAssets(tag: string): { id: number; name: string }[];
   /** El contenido de un asset como texto, o `null` si no está. */
   downloadAsset(tag: string, name: string): string | null;
+  /**
+   * Un workflow reutilizable de star (`web-release.yml`) como estaba en ese tag
+   * (`v0.7.0`), o `null` si no se pudo leer (sin red, o ese tag no lo tiene).
+   */
+  starWorkflow(file: string, ref: string): string | null;
   /** Los nombres de los secretos del repo (nunca los valores), o `null` si no se pudo preguntar. */
   secretNames(): string[] | null;
   /** Guarda un secreto del repo. El valor va por stdin: nunca en argv ni en pantalla. */
@@ -72,7 +93,15 @@ export function parseMergeSettings(json: string): MergeSettings | null {
   };
 }
 
-type Rollup = { status?: string; conclusion?: string; state?: string };
+type Rollup = {
+  /** El nombre de un check run de Actions. */
+  name?: string;
+  /** El nombre de un commit status de otro servicio (Vercel, por ejemplo). */
+  context?: string;
+  status?: string;
+  conclusion?: string;
+  state?: string;
+};
 
 /**
  * Los checks de un PR, reducidos a una palabra.
@@ -80,11 +109,17 @@ type Rollup = { status?: string; conclusion?: string; state?: string };
  * `statusCheckRollup` mezcla dos tipos: los check runs de Actions (con `status`
  * y `conclusion`) y los commit statuses de otros servicios (con `state`). Un
  * neutral o un skipped no frena nada; un cancelado sí, porque no prueba nada.
+ *
+ * Los checks de `ignore` (por nombre, sin distinguir mayúsculas) se descartan
+ * antes: un servicio externo que no bloquea, como el deploy de Vercel, no debe
+ * contar como CI roto ni como CI pendiente.
  */
-export function summarizeChecks(rollup: Rollup[]): PullRequest["checks"] {
-  if (rollup.length === 0) return "none";
+export function summarizeChecks(rollup: Rollup[], ignore: string[] = []): PullRequest["checks"] {
+  const skip = new Set(ignore.map((n) => n.toLowerCase()));
+  const counted = rollup.filter((c) => !skip.has((c.name || c.context || "").toLowerCase()));
+  if (counted.length === 0) return "none";
   let pending = false;
-  for (const item of rollup) {
+  for (const item of counted) {
     const result = (item.conclusion || item.state || "").toUpperCase();
     const status = (item.status ?? "").toUpperCase();
     if (
@@ -123,7 +158,7 @@ export function ghIn(cwd: string): Gh {
       if (r.status !== 0) throw new StarError(`gh no pudo abrir el PR:\n${r.err}`);
       return r.out.split(/\r?\n/).pop() ?? "";
     },
-    findPr(head) {
+    findPr(head, ignore) {
       const r = run([
         "pr",
         "list",
@@ -149,22 +184,56 @@ export function ghIn(cwd: string): Gh {
         number: pr.number,
         url: pr.url,
         state: pr.state,
-        checks: summarizeChecks(pr.statusCheckRollup ?? []),
+        checks: summarizeChecks(pr.statusCheckRollup ?? [], ignore),
         mergeable:
           pr.mergeable === "MERGEABLE" ? true : pr.mergeable === "CONFLICTING" ? false : null,
       };
     },
-    mergeSquash(number, subject) {
+    viewPr(ref, ignore) {
       const r = run([
         "pr",
-        "merge",
-        String(number),
-        "--squash",
-        "--subject",
-        subject,
-        "--body",
-        "",
+        "view",
+        ...(ref ? [ref] : []),
+        "--json",
+        "number,url,state,mergeable,statusCheckRollup,title,body,baseRefName,headRefName",
       ]);
+      // gh sale con error cuando la rama no tiene PR: eso es "no hay", no una falla.
+      if (r.status !== 0) {
+        if (/no pull requests found|could not resolve/i.test(r.err)) return null;
+        throw new StarError(`gh no pudo leer el PR:
+${r.err}`);
+      }
+      const pr = JSON.parse(r.out) as {
+        number: number;
+        url: string;
+        state: PullRequest["state"];
+        mergeable: string;
+        statusCheckRollup: Rollup[] | null;
+        title: string;
+        body: string;
+        baseRefName: string;
+        headRefName: string;
+      };
+      return {
+        number: pr.number,
+        url: pr.url,
+        state: pr.state,
+        checks: summarizeChecks(pr.statusCheckRollup ?? [], ignore),
+        mergeable:
+          pr.mergeable === "MERGEABLE" ? true : pr.mergeable === "CONFLICTING" ? false : null,
+        title: pr.title,
+        body: pr.body ?? "",
+        base: pr.baseRefName,
+        head: pr.headRefName,
+      };
+    },
+    mergeSquash(number, subject, body = "") {
+      // El cuerpo por stdin, como al crear el PR: en Windows los saltos de
+      // línea no sobreviven en argv.
+      const r = run(
+        ["pr", "merge", String(number), "--squash", "--subject", subject, "--body-file", "-"],
+        body,
+      );
       if (r.status !== 0) throw new StarError(`gh no pudo mergear el PR #${number}:\n${r.err}`);
     },
     releaseAssets(tag) {
@@ -176,6 +245,15 @@ export function ghIn(cwd: string): Gh {
         id: Number(/\/assets\/(\d+)/.exec(a.apiUrl)?.[1] ?? Number.NaN),
         name: a.name,
       }));
+    },
+    starWorkflow(file, ref) {
+      const r = run([
+        "api",
+        `repos/baironvillar/star/contents/.github/workflows/${file}?ref=${ref}`,
+        "-H",
+        "Accept: application/vnd.github.raw+json",
+      ]);
+      return r.status === 0 ? r.out : null;
     },
     secretNames() {
       const r = run(["secret", "list", "--json", "name"]);

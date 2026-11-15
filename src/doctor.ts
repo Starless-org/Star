@@ -9,6 +9,7 @@ import { HOOK_NAMES, HOOKS_DIR, inspectHooks } from "./hooks.ts";
 import { STAR } from "./command.ts";
 import { mergeChanges } from "./merge-settings.ts";
 import { MAIN } from "./release.ts";
+import { declaredInputs, starWorkflowUses } from "./workflow-inputs.ts";
 import { inspectUpdater, planUpdater, PRIVATE_SECRET } from "./updater-init.ts";
 import { currentVersion, disagreements, inspect } from "./version.ts";
 
@@ -211,7 +212,7 @@ function scripts(root: string): Finding[] {
     : [];
 }
 
-function ci(root: string): Finding[] {
+function ci(root: string, gh: Gh): Finding[] {
   const dir = join(root, ".github", "workflows");
   const texts = existsSync(dir)
     ? readdirSync(dir)
@@ -262,6 +263,7 @@ function ci(root: string): Finding[] {
     );
   }
   findings.push(...workflowVersions(root, texts));
+  findings.push(...workflowInputs(texts, gh));
   return findings;
 }
 
@@ -296,6 +298,49 @@ function workflowVersions(root: string, texts: string[]): Finding[] {
         ),
       ]
     : [ok("ci", `los workflows de star van en la misma versión instalada (${version})`)];
+}
+
+/**
+ * Un input que la app le pasa a un workflow de star que, en esa versión, no lo
+ * define: GitHub no avisa con un error legible, la corrida muere con
+ * `startup_failure` y sin ningún log (pasó con `publish` en
+ * `web-release.yml@v0.7.0`). Se compara contra el workflow de ese tag.
+ */
+export function workflowInputs(texts: string[], gh: Gh): Finding[] {
+  if (!gh.available()) return [];
+  const uses = texts.flatMap(starWorkflowUses).filter((u) => u.inputs.length > 0);
+  const findings: Finding[] = [];
+  const seen = new Set<string>();
+  for (const use of uses) {
+    const key = `${use.file}@${use.version}:${use.inputs.join(",")}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const text = gh.starWorkflow(use.file, `v${use.version}`);
+    if (text === null) {
+      findings.push(
+        warn(
+          "ci",
+          `no pude leer ${use.file}@v${use.version} para revisar los inputs que se le pasan`,
+        ),
+      );
+      continue;
+    }
+    const declared = declaredInputs(text);
+    const unknown = use.inputs.filter((i) => !declared.includes(i));
+    findings.push(
+      unknown.length > 0
+        ? error(
+            "ci",
+            `${use.file}@v${use.version} no define el input ${unknown.join(", ")}: la corrida muere con startup_failure y sin log`,
+            `usa un @v que lo defina, o quita ${unknown.length > 1 ? "esos inputs" : "ese input"} del workflow de la app`,
+          )
+        : ok(
+            "ci",
+            `los inputs que se le pasan a ${use.file}@v${use.version} existen en esa versión`,
+          ),
+    );
+  }
+  return findings;
 }
 
 function remote(git: Git, gh: Gh, root: string): Finding[] {
@@ -447,7 +492,7 @@ export function diagnose({ root, git, gh }: DoctorDeps): Finding[] {
     ...guard("hooks", () => hooks(root, git)),
     ...guard("vite+", () => vitePlus(root)),
     ...guard("scripts", () => scripts(root)),
-    ...guard("ci", () => ci(root)),
+    ...guard("ci", () => ci(root, gh)),
     ...guard("github", () => remote(git, gh, root)),
     ...guard("updater", () => updater(root, gh)),
     ...guard("secretos", () => secrets(git)),

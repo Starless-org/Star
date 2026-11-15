@@ -274,3 +274,93 @@ espera el CI y hace el `finish`. Sin la clave, nada cambia.
 - **No es el auto-merge de GitHub.** Ése mergea con el squash del repo, pero
   no actualiza `main` ni crea el tag, y exige protección de rama con checks
   requeridos. Para los PR de features sigue pendiente.
+
+## 23. Lanzar se pregunta; publicar va con `autoMerge`
+
+Lo automático llega hasta la base. Lanzar una versión (llevarla a `main`,
+empujar el tag y publicar la release) es lo que la hace llegar a la gente, y
+eso se pregunta, salvo que la app pida lo contrario.
+
+- **Con `autoMerge`, la pregunta va después del squash**: "¿Lanzar la x.y.z?".
+  Con un no, la versión queda en la base sin `main` ni tag, y
+  `star release finish x.y.z` la lanza cuando se quiera. Si no hay nadie para
+  contestar, se para igual y dice cómo seguir.
+- **`"confirmRelease": false` la quita**, y con `autoMerge` todo es
+  automático. Por defecto es `true`: lo que no se configura pregunta.
+- **Sin `autoMerge` no cambia nada.** `star release finish` ya preguntaba antes
+  de mergear, y esa pregunta cubre el lanzamiento.
+- **Con `autoMerge`, la release se publica sola.** El tag existe porque alguien
+  dijo que sí, o porque la app pidió que fuera 100% automático, así que el
+  borrador ya no protege nada. Igual nace en borrador y se publica al final,
+  después de revisarla: en escritorio, sólo si `star release check` pasa,
+  porque publicarla es cuando las apps instaladas se actualizan. Sin
+  `autoMerge` sigue en borrador y se publica a mano.
+- **La decide el CLI, no el YAML.** `star verify` escribe `publish` según la
+  configuración de la app, y los workflows sólo lo usan. Cierra la pregunta
+  abierta 2 de [`alcance.md`](alcance.md) sin un `star publish` aparte.
+
+## 24. `star pr merge`: los PR del día los mergea star
+
+Mergear a la base es automático (decisión 23), pero sólo el PR de una versión
+lo mergeaba star; los demás se mergeaban a mano o con `gh`, y cada uno armaba
+el asunto a su manera.
+
+- **Un comando, no el auto-merge de GitHub.** Ése exige una regla con checks
+  requeridos en la base, y si lo activa un workflow, el merge lo hace el
+  `GITHUB_TOKEN` y no dispara los workflows del push a la base. `star pr merge`
+  corre en la terminal de quien lo llama (o del agente que abrió el PR), con su
+  sesión de `gh`.
+- **Espera el CI con lo mismo que `release`** (`src/ci-wait.ts`): cada 15
+  segundos, hasta 30 minutos, y "sin checks" cuenta como "todavía no" durante
+  el primer minuto.
+- **No pregunta.** Llamarlo es pedirlo, y mergear a la base no lanza nada.
+- **Revisa antes de esperar** lo que el CI no va a cambiar: que vaya a la base
+  y no a `main`, que no sea el PR de una versión (ése lo termina
+  `star release finish`, que además etiqueta) y que el título cumpla la
+  convención, porque es el asunto del commit.
+- **Squash con el título, el número del PR y la descripción** (decisión 18),
+  como lo deja GitHub al mergear desde la web, aunque el repo no esté
+  configurado así: star le pasa el asunto y el cuerpo.
+- Si estabas en la rama del PR, quedas en la base al día.
+
+## 25. El commit de la versión lleva un `docs-skip`
+
+Las apps con `docs-check` y un doc-map exigen documentación cuando cambia
+`package.json`, o un `docs-skip: <motivo de al menos 20 caracteres>` como
+última línea del mensaje del commit. El commit de versión sólo cambia números
+y mueve el CHANGELOG, y el CI del PR salía rojo.
+
+- **El cuerpo del commit de la versión termina con** `docs-skip: version bump
+  only, the release notes live in CHANGELOG.md`, sin nada después. El asunto
+  sigue siendo la versión sola; el cuerpo es libre en la convención.
+- **Sólo ese commit.** Un `docs-skip` en otro commit saltaría el gate de docs
+  de un cambio que sí debe documentarse.
+- La constante está en `src/release.ts` (`DOCS_SKIP`) y un test la fija.
+
+## 26. `ignoreChecks`: servicios externos que no bloquean
+
+`star release` y `star pr merge` esperan los checks del PR y se paran si uno
+falla. Un servicio externo como el deploy de Vercel aparece en esos checks, y
+si falla (o tarda) frena una versión que el CI propio ya aprobó.
+
+- **Una lista de nombres en la config**, `"star": { "ignoreChecks": [...] }`,
+  vacía por defecto: nada se ignora sin decirlo.
+- **Se descartan antes de resumir los checks** (`summarizeChecks`), así el
+  ignorado no cuenta ni como fallo ni como pendiente. Se compara el nombre del
+  check run (`name`) o del commit status (`context`), completo y sin distinguir
+  mayúsculas: `Vercel` no ignora `Vercel Preview Comments`.
+- Si todo se ignora, el PR queda "sin checks", como uno que no tiene CI.
+
+## 27. `star doctor` compara los inputs con el workflow de su versión
+
+Una app pasó `publish` a `web-release.yml@v0.7.0`, que todavía no lo definía:
+`startup_failure` sin ningún log. El chequeo de versiones (que el `@v` coincida
+con el star instalado) no lo atrapa si ambas dicen lo mismo.
+
+- **Se lee el workflow de ese tag desde GitHub** (`gh api …/contents/…?ref=vX`),
+  no del clon: el que importa es el de la versión a la que apunta la app. Es la
+  única parte de `doctor` que sale a la red, y sólo con `gh` con sesión.
+- **Texto, no YAML**: sin parser en el kit; los inputs de `workflow_call` y el
+  `with:` de un job tienen una forma fija (`src/workflow-inputs.ts`).
+- **Un input desconocido es error** (la corrida no arranca); no poder leer el
+  workflow es sólo aviso.

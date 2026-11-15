@@ -6,6 +6,47 @@ siguen [SemVer](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+## [0.8.0] - 2026-11-14
+
+### Corregido
+
+- El commit de la versión que crea `star release` ahora termina con la línea
+  `docs-skip: version bump only, the release notes live in CHANGELOG.md`. Las
+  apps con `docs-check` exigen documentación cuando cambia `package.json`, o
+  un `docs-skip` como última línea del mensaje; sin él, el CI del PR de la
+  versión salía rojo y había que agregar a mano un commit vacío. El asunto
+  sigue siendo sólo la versión, y ningún otro commit lleva la línea.
+
+### Agregado
+
+- `star doctor` revisa los inputs que la app le pasa a los workflows de star:
+  si el `with:` de un job incluye un input que el workflow de esa versión
+  (`…/web-release.yml@v0.7.0`) no define, es un error. GitHub no lo explica: la
+  corrida muere con `startup_failure` y sin log. Compara contra el workflow de
+  ese tag, leído con `gh`; sin `gh` no dice nada, y si no pudo leerlo, avisa.
+- `"star": { "ignoreChecks": ["Vercel"] }`: nombres de checks que no cuentan al
+  esperar el CI de un PR, en `star release` y en `star pr merge`. Sirve para
+  servicios externos que no bloquean (el deploy de Vercel): antes un check
+  rojo de ésos hacía abortar la release con "el CI del PR falló". Se compara
+  el nombre completo, sin distinguir mayúsculas; si todo se ignora, el PR queda
+  "sin checks".
+- `star pr merge [número]`: espera el CI de un PR (el de la rama actual, si no
+  dices cuál) y lo mergea a la base con squash, con el título y el número del
+  PR como asunto (como lo deja GitHub) y la descripción como cuerpo. No pregunta: mergear a la base es automático. Rechaza
+  antes de esperar un PR a `main`, el de una versión o un título fuera de la
+  convención, y no mergea si el CI falla o hay conflictos.
+
+- Con `autoMerge`, el PR de la versión se mergea solo a la base, pero antes de
+  llevarla a `main` y empujar el tag star pregunta "¿Lanzar la x.y.z?". Con un
+  no, queda en la base y se lanza después con `star release finish`.
+- `"star": { "confirmRelease": false }` quita esa pregunta: con `autoMerge`, la
+  versión sale 100% automática.
+- Con `autoMerge`, la release se publica sola cuando el workflow termina de
+  construirla y revisarla (en escritorio, después de `star release check`). Sin
+  `autoMerge` sigue en borrador. `verify.yml` devuelve `publish`, y
+  `web-release.yml` y `tauri-release.yml` lo reciben: pásalo como
+  `publish: ${{ needs.verify.outputs.publish }}`.
+
 ## [0.7.0] - 2026-11-12
 
 ### Agregado

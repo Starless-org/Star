@@ -23,6 +23,8 @@ describe("readConfig", () => {
       gate: ["vp check", "vp test run"],
       lint: { skip: [] },
       autoMerge: false,
+      confirmRelease: true,
+      ignoreChecks: [],
     });
   });
 
@@ -36,6 +38,8 @@ describe("readConfig", () => {
       gate: ["vp run verify"],
       lint: { skip: [] },
       autoMerge: false,
+      confirmRelease: true,
+      ignoreChecks: [],
     });
     expect(readConfig(withPackage({ star: { gate: ["biome check", "bun test"] } })).gate).toEqual([
       "biome check",
@@ -47,6 +51,20 @@ describe("readConfig", () => {
     expect(readConfig(withPackage({ star: { autoMerge: true } })).autoMerge).toBe(true);
     expect(readConfig(withPackage({})).autoMerge).toBe(false);
     expect(() => readConfig(withPackage({ star: { autoMerge: "sí" } }))).toThrow(StarError);
+  });
+
+  it("lee confirmRelease, que por defecto pregunta", () => {
+    expect(readConfig(withPackage({})).confirmRelease).toBe(true);
+    expect(readConfig(withPackage({ star: { confirmRelease: false } })).confirmRelease).toBe(false);
+    expect(() => readConfig(withPackage({ star: { confirmRelease: "no" } }))).toThrow(StarError);
+  });
+
+  it("lee ignoreChecks, que por defecto no ignora nada", () => {
+    expect(readConfig(withPackage({})).ignoreChecks).toEqual([]);
+    expect(readConfig(withPackage({ star: { ignoreChecks: ["Vercel"] } })).ignoreChecks).toEqual([
+      "Vercel",
+    ]);
+    expect(() => readConfig(withPackage({ star: { ignoreChecks: "Vercel" } }))).toThrow(StarError);
   });
 
   it("lee la historia que el lint no revisa", () => {

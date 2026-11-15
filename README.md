@@ -54,12 +54,18 @@ Se divide en dos capas:
 - **Núcleo, para cualquier app con Vite:** versión, changelog, el comando
   `release`, hooks de git, `doctor` y el workflow reutilizable de verificación.
 - **Targets, lo que se publica:**
-  - `web`: release en borrador con las notas y los assets que la app adjunte.
+  - `web`: release con las notas y los assets que la app adjunte, en borrador
+    o publicada sola si la app usa `autoMerge`.
     La imagen Docker y el despliegue quedan en el workflow de cada app.
   - `tauri`: build con `tauri-action` en Windows y Linux, updater (llaves y
     secretos), verificación de `latest.json` y la plantilla del relay.
 
 Detalle en [`docs/arquitectura.md`](docs/arquitectura.md).
+
+El commit de versión que crea `star release` se llama como la versión y su
+cuerpo termina con `docs-skip: version bump only, the release notes live in
+CHANGELOG.md`, para que el `docs-check` de la app no lo rechace (decisión 25
+de [`docs/decisiones.md`](docs/decisiones.md)).
 
 ## Plataformas
 
