@@ -64,6 +64,12 @@ describe("starWorkflowUses", () => {
       "jobs:\n  r:\n    with:\n      a: 1\n    uses: baironvillar/star/.github/workflows/x.yml@v1.0.0\n";
     expect(starWorkflowUses(text)[0]?.inputs).toEqual(["a"]);
   });
+
+  it("reconoce el repo con su nombre nuevo, Starless-org/Star", () => {
+    const text =
+      "jobs:\n  r:\n    uses: Starless-org/Star/.github/workflows/x.yml@v1.0.0\n    with:\n      a: 1\n";
+    expect(starWorkflowUses(text)[0]?.file).toBe("x.yml");
+  });
 });
 
 describe("workflowInputs", () => {

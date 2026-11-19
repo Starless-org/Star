@@ -5,7 +5,7 @@ name: web-release
 #
 #   jobs:
 #     verify:
-#       uses: baironvillar/star/.github/workflows/verify.yml@v0.3.0
+#       uses: Starless-org/Star/.github/workflows/verify.yml@v0.3.0
 #     build:
 #       needs: verify
 #       ...                                   # la app sube sus archivos con
@@ -14,7 +14,7 @@ name: web-release
 #       needs: [verify, build]
 #       permissions:
 #         contents: write
-#       uses: baironvillar/star/.github/workflows/web-release.yml@v0.3.0
+#       uses: Starless-org/Star/.github/workflows/web-release.yml@v0.3.0
 #       with:
 #         version: ${{ needs.verify.outputs.version }}
 #         assets: web-bundle                  # nombre o patrón de artefactos

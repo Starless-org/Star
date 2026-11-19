@@ -24,7 +24,7 @@ publique en npm.
 ## 4. El CLI en la raíz del repo
 
 Bun no instala un subdirectorio de un repo git. Si el CLI viviera en
-`packages/cli`, no se podría instalar con `github:baironvillar/star`.
+`packages/cli`, no se podría instalar con `github:Starless-org/Star`.
 
 ## 5. No se reinventa `tauri-action` ni el updater
 
@@ -69,7 +69,7 @@ hecho para mis apps.
 ## 11. star es la librería; liftoff es la interfaz gráfica
 
 La librería (CLI, workflows, hooks, plantillas) se desarrolla acá.
-[liftoff](https://github.com/baironvillar/liftoff) va a ser una extensión con
+liftoff va a ser una extensión con
 interfaz gráfica construida encima de star, en su propio repo. Separarlas obliga
 a que todo lo que haga la interfaz se pueda hacer desde la terminal.
 

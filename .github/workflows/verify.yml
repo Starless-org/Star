@@ -5,7 +5,7 @@ name: verify
 #
 #   jobs:
 #     verify:
-#       uses: baironvillar/star/.github/workflows/verify.yml@v0.3.0
+#       uses: Starless-org/Star/.github/workflows/verify.yml@v0.3.0
 #
 # La lógica está en `star verify`, no acá: el YAML sólo prepara la máquina. Así
 # la misma regla corre en local, y el workflow sirve igual para una app web que

@@ -48,7 +48,9 @@ export type StarWorkflowUse = {
 };
 
 /**
- * Los jobs de una app que llaman a un workflow de star
+ * Los jobs de una app que llaman a un workflow de star. El repo se mudó a
+ * `Starless-org/Star`, y las apps que todavía no actualizaron su `uses:` siguen
+ * diciendo `baironvillar/star`: valen los dos.
  * (`uses: baironvillar/star/.github/workflows/x.yml@v0.7.0`), con lo que le
  * pasan en `with:`.
  */
@@ -56,7 +58,10 @@ export function starWorkflowUses(text: string): StarWorkflowUse[] {
   const lines = text.split(/\r?\n/);
   const found: StarWorkflowUse[] = [];
   lines.forEach((line, at) => {
-    const m = /^(\s*)uses:\s*baironvillar\/star\/\.github\/workflows\/([\w.-]+)@v(\S+)/.exec(line);
+    const m =
+      /^(\s*)uses:\s*(?:baironvillar\/star|Starless-org\/Star)\/\.github\/workflows\/([\w.-]+)@v(\S+)/.exec(
+        line,
+      );
     if (!m) return;
     const indent = (m[1] ?? "").length;
     // El job son las líneas contiguas con esa sangría o más profunda.
