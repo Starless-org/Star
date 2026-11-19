@@ -271,7 +271,7 @@ function ci(root: string, gh: Gh): Finding[] {
 export function starWorkflowRefs(text: string): string[] {
   // Sólo las líneas `uses:`: un comentario con el ejemplo no es un uso.
   const refs = text.matchAll(
-    /^\s*uses:\s*baironvillar\/star\/\.github\/workflows\/[\w.-]+@v(\S+)/gm,
+    /^\s*uses:\s*(?:baironvillar\/star|Starless-org\/Star)\/\.github\/workflows\/[\w.-]+@v(\S+)/gm,
   );
   return [...new Set([...refs].map((m) => m[1] ?? ""))];
 }

@@ -4,7 +4,7 @@
 > y `star notes`, paso 1 del [roadmap](ROADMAP.md)). El resto sigue en diseño.
 
 star es la librería: el CLI, los workflows reutilizables, los hooks y las
-plantillas. [liftoff](https://github.com/baironvillar/liftoff) va a ser una
+plantillas. liftoff va a ser una
 extensión con interfaz gráfica construida encima de star, y se desarrolla
 aparte.
 
@@ -27,7 +27,7 @@ después de usarlo en dos o tres apps queda pulido, se publica.
 
 ## Por qué existe
 
-[Starless](https://github.com/baironvillar/Starless) ya resolvió el flujo de
+[Star Music](https://github.com/Star Music-org/StarMusic) ya resolvió el flujo de
 releases, pero pegado a esa app: unas 3.000 líneas de scripts y workflows con
 el nombre de la app escrito adentro, sólo para Windows y en PowerShell. Cada app
 nueva tendría que copiarlas y adaptarlas, y cada arreglo habría que hacerlo en
@@ -79,15 +79,15 @@ de [`docs/decisiones.md`](docs/decisiones.md)).
 Cada pieza del kit tiene que servirle a una app real. Si no le sirve a ninguna,
 no se construye.
 
-| App                                                  | Tipo                 | Qué usa                 | Cuándo  |
-| ---------------------------------------------------- | -------------------- | ----------------------- | ------- |
-| [flotas](https://github.com/baironvillar/flotas)     | SaaS web (Vite+)     | núcleo + target `web`   | primero |
-| [Starless](https://github.com/baironvillar/Starless) | Escritorio (Tauri 2) | núcleo + target `tauri` | después |
+| App                                                       | Tipo                 | Qué usa                 | Cuándo  |
+| --------------------------------------------------------- | -------------------- | ----------------------- | ------- |
+| [flotas](https://github.com/baironvillar/flotas)          | SaaS web (Vite+)     | núcleo + target `web`   | primero |
+| [Star Music](https://github.com/Star Music-org/StarMusic) | Escritorio (Tauri 2) | núcleo + target `tauri` | después |
 
 ## Cómo se usaría (previsto, no implementado)
 
 ```bash
-bun add -d github:baironvillar/star#v0.1.0
+bun add -d github:Star Music-org/Star#v0.1.0
 bun node_modules/@baironvillar/star/src/cli.ts init hooks    # commit-msg y pre-push
 bun node_modules/@baironvillar/star/src/cli.ts doctor         # qué falta o está mal
 bun node_modules/@baironvillar/star/src/cli.ts init github    # el repo en GitHub, listo para el primer PR
@@ -112,7 +112,7 @@ on:
     tags: ["v*"]
 jobs:
   verify:
-    uses: baironvillar/star/.github/workflows/verify.yml@v0.3.0
+    uses: Star Music-org/Star/.github/workflows/verify.yml@v0.3.0
   build:
     needs: verify
     # lo propio de la app: build, imagen Docker; sube sus archivos con
@@ -121,7 +121,7 @@ jobs:
     needs: [verify, build]
     permissions:
       contents: write
-    uses: baironvillar/star/.github/workflows/web-release.yml@v0.3.0
+    uses: Star Music-org/Star/.github/workflows/web-release.yml@v0.3.0
     with:
       version: ${{ needs.verify.outputs.version }}
       assets: web-bundle
@@ -136,7 +136,7 @@ jobs:
   cómo las instala una app.
 - [`docs/decisiones.md`](docs/decisiones.md): las decisiones tomadas y por qué.
 - [`docs/diagnostico-starless.md`](docs/diagnostico-starless.md): qué se lleva
-  de Starless y qué se mejora.
+  de Star Music y qué se mejora.
 - [`ROADMAP.md`](ROADMAP.md): el plan por pasos.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md): ramas, commits y cómo proponer cambios.
 

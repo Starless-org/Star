@@ -4,7 +4,7 @@ Cada paso termina con la pieza usada por una app real. Ninguno empieza antes de
 que el anterior esté en uso.
 
 **Dónde vamos:** la fase 1 está hecha y la usa flotas. De la fase 2 falta
-cerrar el paso 9: Starless ya publica con star, pero sólo betas.
+cerrar el paso 9: Star Music ya publica con star, pero sólo betas.
 
 ## Fase 1: núcleo, consumido por flotas (hecha)
 
@@ -27,14 +27,14 @@ cerrar el paso 9: Starless ya publica con star, pero sólo betas.
    `web-release.yml`. flotas reemplaza la parte común de su `release.yml` y
    deja sólo lo propio (Docker, empaquetado de la web).
 
-## Fase 2: escritorio, consumido por Starless
+## Fase 2: escritorio, consumido por Star Music
 
 6. ✅ **`tauri-release.yml`** (v0.4.0) con `tauri-action` v1 en Windows y Linux,
    y la verificación de `latest.json` (`star release check`).
 7. ✅ **`init` del updater** (v0.4.0): llaves, secretos y llave pública, con el
    respaldo de la llave fuera del repo.
 8. ✅ **Plantilla del relay** y `star init relay` (v0.4.0).
-9. 🔶 **Migrar Starless** y borrar sus scripts. Hecho: Starless publica con
+9. 🔶 **Migrar Star Music** y borrar sus scripts. Hecho: Star Music publica con
    `verify.yml` y `tauri-release.yml`, sin scripts de release propios, y las
    betas salen como prerelease. Falta: **publicar una versión
    estable** de punta a punta con star y ver que una app instalada se

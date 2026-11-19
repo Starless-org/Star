@@ -3,7 +3,7 @@
 Contexto para cualquier agente que toque este repositorio.
 
 star es un kit de releases para apps con Vite (SaaS web y escritorio con
-Tauri 2). **En uso:** flotas (web) y Starless (escritorio) publican con star.
+Tauri 2). **En uso:** flotas (web) y Star Music (escritorio) publican con star.
 Están hechas la fase 1 y casi toda la fase 2 del [`ROADMAP.md`](ROADMAP.md),
 que marca qué está hecho y qué sigue. Antes de cambiar algo, lee
 [`docs/alcance.md`](docs/alcance.md) (qué entra y qué no) y
@@ -15,7 +15,7 @@ que marca qué está hecho y qué sigue. Antes de cambiar algo, lee
    llaves y contraseñas pasan por stdin, nunca por argv ni por un log.
 2. **No se reinventa `tauri-action` ni el updater de Tauri.** El kit valida
    antes del build y verifica después.
-3. **Cada pieza la consume una app real** (flotas o Starless). Si no, no se hace.
+3. **Cada pieza la consume una app real** (flotas o Star Music). Si no, no se hace.
 4. **Los manifiestos se editan como texto**: nunca se vuelve a serializar un
    JSON o un TOML para cambiar la versión.
 5. **La lógica vive en el CLI, no en el YAML** de los workflows.

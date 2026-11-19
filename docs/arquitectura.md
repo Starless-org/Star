@@ -293,7 +293,7 @@ token de GitHub vive como secreto del Worker, nunca en la app ni en un archivo.
 ## Instalación en una app
 
 ```bash
-bun add -d github:baironvillar/star#v0.1.0
+bun add -d github:Starless-org/Star#v0.1.0
 ```
 
 - **El CLI vive en la raíz del repo** porque Bun no instala un subdirectorio de

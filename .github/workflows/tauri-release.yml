@@ -6,14 +6,14 @@ name: tauri-release
 #
 #   jobs:
 #     verify:
-#       uses: baironvillar/star/.github/workflows/verify.yml@v0.4.0
+#       uses: Starless-org/Star/.github/workflows/verify.yml@v0.4.0
 #       with:
 #         rust: true
 #     release:
 #       needs: verify
 #       permissions:
 #         contents: write
-#       uses: baironvillar/star/.github/workflows/tauri-release.yml@v0.4.0
+#       uses: Starless-org/Star/.github/workflows/tauri-release.yml@v0.4.0
 #       with:
 #         version: ${{ needs.verify.outputs.version }}
 #         platforms: windows,linux
