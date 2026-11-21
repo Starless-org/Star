@@ -91,6 +91,17 @@ describe("checkPullRequest", () => {
     // Un PR encima de otro PR: si el de abajo entra primero, éste no llega nunca.
     expect(checkPullRequest("feat/b", "feat/a", "develop").ok).toBe(false);
   });
+
+  it("acepta las ramas de Dependabot, que no se pueden renombrar, sólo hacia la base", () => {
+    const head = "dependabot/bun/develop/app-minor-patch-4f2a9c1e0b";
+    expect(checkPullRequest(head, "develop", "develop").ok).toBe(true);
+    expect(
+      checkPullRequest("dependabot/npm_and_yarn/@tauri-apps/api-2.9.1", "develop", "develop").ok,
+    ).toBe(true);
+    expect(checkPullRequest(head, "main", "develop").ok).toBe(false);
+    // Fuera de un PR la regla no cambia: nadie empuja a mano una rama así.
+    expect(checkBranch(head).ok).toBe(false);
+  });
 });
 
 describe("checkPush", () => {

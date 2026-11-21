@@ -6,6 +6,13 @@ siguen [SemVer](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+### Corregido
+
+- `star lint branch --into` acepta las ramas `dependabot/...` en un pull
+  request hacia la base. Dependabot no deja cambiar el nombre de sus ramas, así
+  que sus PR salían rojos en el chequeo de la rama. El hook `pre-push` no
+  cambia: una rama empujada a mano con ese nombre se sigue frenando.
+
 ## [0.8.0] - 2026-11-14
 
 ### Corregido
