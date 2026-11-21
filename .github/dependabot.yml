@@ -1,0 +1,30 @@
+# Dependabot: revisa dependencias cada semana y abre PRs hacia develop.
+# Los parches y menores van agrupados en un solo PR; los mayores llegan por
+# separado porque pueden romper cosas.
+version: 2
+updates:
+  - package-ecosystem: bun
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      actions:
+        patterns: ["*"]
