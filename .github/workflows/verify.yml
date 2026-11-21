@@ -62,7 +62,7 @@ jobs:
       commit: ${{ steps.verify.outputs.commit }}
       publish: ${{ steps.verify.outputs.publish }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Sin historia completa no está el commit del tag para leer su asunto.
           fetch-depth: 0
@@ -96,7 +96,7 @@ jobs:
 
       # Las notas viajan como artefacto: el job que crea la release no necesita
       # instalar la app para leer el changelog.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-notes
           path: release-notes.md

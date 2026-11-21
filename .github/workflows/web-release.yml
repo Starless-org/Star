@@ -53,12 +53,12 @@ jobs:
       TAG: ${{ github.ref_name }}
       VERSION: ${{ inputs.version }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: release-notes
 
       - if: inputs.assets != ''
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: ${{ inputs.assets }}
           path: assets
