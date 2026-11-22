@@ -6,6 +6,8 @@ siguen [SemVer](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+## [0.8.2] - 2026-11-22
+
 ### Corregido
 
 - `star lint commits` deja pasar el asunto largo de un commit de Dependabot.
