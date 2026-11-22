@@ -52,7 +52,7 @@ export function subjectOf(message: string): string {
  * Nunca se reescribe el mensaje: un hook que edita lo que escribiste es un hook
  * del que no te fías después.
  */
-export function checkSubject(subject: string): Verdict {
+export function checkSubject(subject: string, maxLength: number = MAX_SUBJECT): Verdict {
   if (subject === "") return fail("el asunto está vacío");
   if (WRITTEN_BY_GIT.test(subject)) return ok;
   if (new RegExp(`^${VERSION}$`).test(subject)) return ok;
@@ -61,8 +61,7 @@ export function checkSubject(subject: string): Verdict {
   // GitHub agrega al squash no cuenta.
   const written = subject.replace(/ (?:\(#[0-9]+\)|#[0-9]+)$/, "");
   const length = written.length;
-  if (length > MAX_SUBJECT)
-    return fail(`tiene ${length} caracteres, y el máximo es ${MAX_SUBJECT}`);
+  if (length > maxLength) return fail(`tiene ${length} caracteres, y el máximo es ${maxLength}`);
   if (subject.endsWith(".")) return fail("termina en punto");
 
   const match = CONVENTIONAL.exec(subject);
@@ -75,8 +74,23 @@ export function checkSubject(subject: string): Verdict {
   return ok;
 }
 
+/**
+ * Un commit que escribió Dependabot: lleva su firma al final del mensaje.
+ *
+ * Dependabot arma el asunto con el nombre del grupo y el directorio (`bump the
+ * cargo-minor-patch group across 1 directory with 7 updates`) y no deja
+ * acortarlo, así que pasaba de 72 caracteres cada semana. La firma la
+ * puede escribir cualquiera: no es una puerta de seguridad, sólo una regla de
+ * estilo que se deja de aplicar a quien no puede cumplirla.
+ */
+export function isDependabotCommit(message: string): boolean {
+  return /^Signed-off-by: dependabot\[bot\] </m.test(message);
+}
+
 export function checkMessage(message: string): Verdict {
-  return checkSubject(subjectOf(message));
+  // De Dependabot sólo se afloja el largo: el tipo y el formato se revisan igual.
+  const max = isDependabotCommit(message) ? Number.POSITIVE_INFINITY : MAX_SUBJECT;
+  return checkSubject(subjectOf(message), max);
 }
 
 /**
