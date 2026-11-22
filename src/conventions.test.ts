@@ -6,6 +6,7 @@ import {
   checkPush,
   checkSubject,
   checkTitle,
+  MAX_SUBJECT,
   subjectOf,
 } from "./conventions.ts";
 
@@ -101,6 +102,29 @@ describe("checkPullRequest", () => {
     expect(checkPullRequest(head, "main", "develop").ok).toBe(false);
     // Fuera de un PR la regla no cambia: nadie empuja a mano una rama así.
     expect(checkBranch(head).ok).toBe(false);
+  });
+});
+
+describe("checkMessage de Dependabot", () => {
+  const long = "chore(deps): bump the cargo-minor-patch group across 1 directory with 7 updates";
+  const signed = (subject: string) =>
+    `${subject}
+
+Bumps the group.
+
+Signed-off-by: dependabot[bot] <support@github.com>`;
+
+  it("deja pasar el asunto largo que Dependabot no deja acortar", () => {
+    expect(long.length).toBeGreaterThan(MAX_SUBJECT);
+    expect(checkMessage(signed(long)).ok).toBe(true);
+  });
+
+  it("el mismo asunto largo de una persona sigue fallando", () => {
+    expect(checkMessage(long).ok).toBe(false);
+  });
+
+  it("de Dependabot sólo se afloja el largo: el formato se revisa igual", () => {
+    expect(checkMessage(signed("Bump the group across 1 directory with 7 updates")).ok).toBe(false);
   });
 });
 

@@ -6,6 +6,17 @@ siguen [SemVer](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+## [0.8.2] - 2026-11-22
+
+### Corregido
+
+- `star lint commits` deja pasar el asunto largo de un commit de Dependabot.
+  Dependabot arma el asunto con el nombre del grupo y no deja acortarlo, así
+  que el de un grupo de varias dependencias pasaba de 72 caracteres y el PR
+  salía rojo en «Commit messages». Se reconoce por su firma
+  (`Signed-off-by: dependabot[bot]`) y sólo se afloja el largo: el tipo y el
+  formato se revisan igual. Una persona con un asunto largo sigue fallando.
+
 ## [0.8.1] - 2026-11-22
 
 ### Corregido
