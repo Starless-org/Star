@@ -6,6 +6,8 @@ siguen [SemVer](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+## [0.8.1] - 2026-11-22
+
 ### Corregido
 
 - `star lint branch --into` acepta las ramas `dependabot/...` en un pull
