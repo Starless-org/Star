@@ -121,6 +121,10 @@ export function checkPullRequest(head: string, into: string, base: string): Verd
   if (into !== base) {
     return fail(`un pull request va a ${base}, no a ${into}`);
   }
+  // Dependabot nombra sus ramas `dependabot/<ecosistema>/...` y no deja
+  // cambiarlas. Sólo vale en un PR: el hook pre-push sigue frenando a quien
+  // empuje a mano una rama con ese nombre.
+  if (head.startsWith("dependabot/")) return ok;
   return checkBranch(head);
 }
 
